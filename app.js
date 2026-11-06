@@ -76,7 +76,7 @@
   async function makeCode(item) {
     const counter = Math.floor(Date.now()/1000/(item.period||30));
     const keyBytes = base32ToBytes(item.secret);
-    const cryptoKey = await crypto.subtle.importKey("raw",keyBytes,{name:"HMAC",hash:item.algorithm||"SHA-1"},false,["sign"]);
+    const cryptoKey = await crypto.subtle.importKey("raw",keyBytes,{name:"HMAC",hash:(item.algorithm||"SHA1").replace("SHA1","SHA-1")},false,["sign"]);
     const msg = new ArrayBuffer(8), view = new DataView(msg);
     view.setUint32(4,counter);
     const mac = new Uint8Array(await crypto.subtle.sign("HMAC",cryptoKey,msg));
