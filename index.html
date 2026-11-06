@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10131d">
+  <meta name="description" content="Catlow Authenticator. Private, offline one-time codes stored on this device.">
+  <title>Catlow Authenticator</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Catlow Authenticator home">
+        <span class="brand-mark">C</span>
+        <span><strong>Catlow</strong><small>AUTHENTICATOR</small></span>
+      </a>
+      <div class="top-actions">
+        <span id="lock-state" class="status"><i></i> Locked</span>
+        <button id="lock-button" class="icon-button" type="button" title="Lock vault" aria-label="Lock vault" hidden>⌑</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="gate" class="gate-card">
+        <div class="eyebrow">YOUR PRIVATE CODE VAULT</div>
+        <h1 id="gate-title">A safer second step.</h1>
+        <p id="gate-copy">Your authentication codes stay encrypted on this device. Catlow works offline once installed.</p>
+        <form id="unlock-form" class="stack">
+          <label for="master-password" id="password-label">Create a vault password</label>
+          <input id="master-password" type="password" minlength="10" autocomplete="current-password" placeholder="At least 10 characters" required>
+          <p id="password-hint" class="hint">Use a password you can safely keep. It cannot be recovered if lost.</p>
+          <p id="gate-error" class="error" role="alert" hidden></p>
+          <button id="unlock-submit" class="primary-button" type="submit">Create encrypted vault</button>
+        </form>
+        <div class="privacy-note"><span>◈</span><span><strong>Private by design</strong><br>Secrets are encrypted in your browser. They are never sent to a Catlow server.</span></div>
+      </section>
+
+      <section id="vault" hidden>
+        <div class="welcome-row">
+          <div><div class="eyebrow">YOUR ACCOUNTS</div><h1>Verification codes</h1><p class="subheading">One-time codes, ready when you are.</p></div>
+          <button id="add-button" class="primary-button add-button" type="button"><span>＋</span> Add account</button>
+        </div>
+        <div class="vault-toolbar">
+          <label class="search-wrap"><span>⌕</span><input id="search" type="search" placeholder="Search accounts" aria-label="Search accounts"></label>
+          <span id="account-count" class="count">0 ACCOUNTS</span>
+        </div>
+        <div id="account-list" class="account-list"></div>
+        <div id="empty-state" class="empty-state">
+          <div class="empty-icon">⌁</div><h2>Your vault is ready</h2>
+          <p>Add your first account using its setup key or an authenticator QR code.</p>
+          <button id="empty-add" class="secondary-button" type="button">Add your first account</button>
+        </div>
+        <footer class="vault-footer">
+          <span><i class="live-dot"></i> Codes generated on this device</span>
+          <div><button id="export-button" class="text-button" type="button">Export backup</button><button id="import-button" class="text-button" type="button">Import backup</button><input id="import-file" type="file" accept="application/json,.json" hidden></div>
+        </footer>
+      </section>
+    </main>
+    <footer class="site-footer">CATLOW AUTHENTICATOR <span>·</span> PRIVATE. LOCAL. YOURS.</footer>
+  </div>
+
+  <dialog id="account-dialog" class="modal">
+    <form id="account-form" class="modal-content">
+      <div class="modal-head"><div><div class="eyebrow">NEW AUTHENTICATOR</div><h2>Add an account</h2></div><button class="close-button" type="button" data-close aria-label="Close">×</button></div>
+      <div class="method-tabs"><button type="button" class="tab active" data-method="manual">Enter setup key</button><button type="button" class="tab" data-method="scan">Scan QR code</button></div>
+      <div id="manual-panel" class="stack">
+        <label for="issuer">Service / issuer</label><input id="issuer" placeholder="e.g. GitHub" maxlength="80" required>
+        <label for="account-name">Account name</label><input id="account-name" placeholder="e.g. alfie@example.com" maxlength="120">
+        <label for="secret">Secret key</label><input id="secret" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Paste the setup key" required>
+        <p class="hint">Spaces are okay. The key is stored only inside your encrypted vault.</p>
+        <details><summary>Advanced settings</summary><div class="advanced-grid"><label>Code length<select id="digits"><option value="6">6 digits</option><option value="8">8 digits</option></select></label><label>Refresh interval<select id="period"><option value="30">30 seconds</option><option value="60">60 seconds</option></select></label></div></details>
+      </div>
+      <div id="scan-panel" class="stack" hidden>
+        <p class="hint">Point your camera at an authenticator setup QR code. Camera access is used only to read the code.</p>
+        <video id="camera" playsinline muted></video>
+        <button id="start-camera" class="secondary-button" type="button">Start camera</button>
+        <p id="scan-status" class="hint" role="status"></p>
+        <p class="hint">If scanning is unavailable, choose “Enter setup key” and paste the key or otpauth:// link.</p>
+      </div>
+      <p id="account-error" class="error" role="alert" hidden></p>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button id="save-account" type="submit" class="primary-button">Add to vault</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-dialog" class="modal">
+    <div class="modal-content"><div class="modal-head"><h2>Remove account?</h2><button class="close-button" type="button" data-close>×</button></div><p class="subheading">This removes the account from this device's encrypted vault. Make sure you have another way to sign in.</p><div class="modal-actions"><button class="secondary-button" type="button" data-close>Keep account</button><button id="confirm-remove" class="danger-button" type="button">Remove account</button></div></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./app.js"></script>
+</body>
+</html>
